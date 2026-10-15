@@ -1,0 +1,1155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nick Sycon — Video Editor</title>
+  <meta name="description" content="Creative video editor portfolio inspired by the supplied reference video." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,600;1,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+
+  <style>
+    /* ==========================================
+       GLOBAL ANIMATIONS & STYLES
+       ========================================== */
+    :root {
+      --bg: #050607;
+      --fg: #eef2f5;
+      --mute: #8a949c;
+      --line: #1b2328;
+      --card: #0a0d0f;
+      --acc: #5ce1ff;
+      --accfg: #031014;
+      --glow: 0 0 24px rgba(92, 225, 255, .35);
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    /* Custom Cursor */
+    .custom-cursor {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 12px;
+      height: 12px;
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 9999;
+      transform: translate(-50%, -50%);
+      transition: transform 0.1s ease-out, width 0.2s, height 0.2s;
+      mix-blend-mode: difference;
+    }
+    .custom-cursor-follower {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 36px;
+      height: 36px;
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 9998;
+      transform: translate(-50%, -50%);
+      transition: transform 0.18s ease-out;
+    }
+    .cursor-active .custom-cursor {
+      width: 32px;
+      height: 32px;
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    /* Page Loader Animation */
+    .page-loader {
+      position: fixed;
+      inset: 0;
+      background: #0a0a0c;
+      z-index: 10000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.8s ease, visibility 0.8s;
+    }
+    .page-loader.loaded {
+      opacity: 0;
+      visibility: hidden;
+    }
+
+    /* Background Orbs Floating Animation */
+    .orb {
+      animation: orbFloat 10s infinite alternate ease-in-out;
+    }
+    .orb-b { animation-delay: -5s; }
+    @keyframes orbFloat {
+      0% { transform: translate(0, 0) scale(1); }
+      50% { transform: translate(30px, -40px) scale(1.1); }
+      100% { transform: translate(-20px, 20px) scale(0.95); }
+    }
+
+    /* Scroll Reveal Animation */
+    .reveal, [data-reveal] {
+      opacity: 0;
+      transform: translateY(40px);
+      transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .reveal.active, [data-reveal].active {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Floating Stack & Orbit Animation */
+    .floating-stack { animation: floatBob 6s infinite ease-in-out; }
+    @keyframes floatBob {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-12px); }
+    }
+    .app-card { animation: orbitRotate 8s infinite linear; }
+    @keyframes orbitRotate {
+      0% { transform: rotate(0deg) translate(15px) rotate(0deg); }
+      100% { transform: rotate(360deg) translate(15px) rotate(-360deg); }
+    }
+
+    /* Portrait Card Image Overlay */
+    .portrait-card {
+      position: relative;
+      width: 50%;
+      height: 50%;
+      border-radius: 20px;
+      overflow: hidden;
+      display: flex;
+      align-items: flex-end;
+      padding: 16px;
+      box-sizing: border-box;
+    }
+
+    .portrait-card img {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center top;
+      z-index: 1;
+    }
+
+    .portrait-card span {
+      position: relative;
+      z-index: 2;
+      color: #ffffff;
+      font-weight: 700;
+      font-size: 0.9rem;
+      line-height: 1.2;
+      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
+    }
+
+    /* Marquee Animation */
+    .marquee { display: flex; overflow: hidden; white-space: nowrap; }
+    .marquee div { display: inline-block; animation: marqueeScroll 20s linear infinite; }
+    @keyframes marqueeScroll {
+      0% { transform: translateX(0%); }
+      100% { transform: translateX(-50%); }
+    }
+
+    /* Center Marquee Banner */
+    .marquee {
+      display: flex;
+      justify-content: right;
+      align-items: center;
+      width: 100%;
+      overflow: hidden;
+      white-space: nowrap;
+      text-align: center;
+      margin: 0 auto;
+    }
+
+    .marquee div {
+      display: flex;
+      justify-content: right;
+      align-items: center;
+      animation: marqueeScroll 20s linear infinite;
+      text-align: center;
+      min-width: 100%;
+    }
+
+    /* Pulse Glow */
+    .scroll-indicator i { animation: pulseGlow 2s infinite ease-in-out; }
+    @keyframes pulseGlow {
+      0%, 100% { transform: scale(1); opacity: 0.8; }
+      50% { transform: scale(1.2); opacity: 1; }
+    }
+    /* Center the Scroll Indicator */
+    .scroll-indicator {
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    /* ==========================================
+       FAMILIAR TOOLS FLOATING SECTION
+       ========================================== */
+    .tools-section {
+      position: relative;
+      padding: 80px 0;
+    }
+    .tools-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 25px;
+      margin-top: 40px;
+      padding: 10px 0;
+    }
+    .tool-floating-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 20px;
+      padding: 26px 18px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      backdrop-filter: blur(10px);
+      position: relative;
+      cursor: pointer;
+      transform-style: preserve-3d;
+      transition: border-color 0.4s ease, box-shadow 0.4s ease, background 0.4s ease;
+      animation: floatBobTool 5s infinite ease-in-out;
+    }
+
+    .tool-floating-card:nth-child(2n) { animation-delay: -1.2s; animation-duration: 4.8s; }
+    .tool-floating-card:nth-child(3n) { animation-delay: -2.5s; animation-duration: 5.6s; }
+    .tool-floating-card:nth-child(4n) { animation-delay: -0.8s; animation-duration: 4.5s; }
+    .tool-floating-card:nth-child(5n) { animation-delay: -3.1s; animation-duration: 5.4s; }
+
+    @keyframes floatBobTool {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-14px) rotate(1.5deg); }
+    }
+
+    .tool-floating-card:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.3);
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5), 0 0 20px rgba(255, 255, 255, 0.1);
+      animation-play-state: paused;
+    }
+
+    .tool-icon {
+      width: 54px;
+      height: 54px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 14px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+      transition: transform 0.4s ease;
+      letter-spacing: -0.5px;
+    }
+
+    .tool-icon.pr { background: linear-gradient(135deg, #00005b, #9999ff); }
+    .tool-icon.ae { background: linear-gradient(135deg, #00005b, #d699ff); }
+    .tool-icon.capcut { background: linear-gradient(135deg, #111, #fff); color: #000; }
+    .tool-icon.canva { background: linear-gradient(135deg, #00c4cc, #7d2ae8); }
+    .tool-icon.shopify { background: linear-gradient(135deg, #95bf47, #5e8e3e); }
+    .tool-icon.meta { background: linear-gradient(135deg, #0064e0, #0084ff); }
+    .tool-icon.fbads { background: linear-gradient(135deg, #1877f2, #4267b2); }
+    .tool-icon.gspace { background: linear-gradient(135deg, #ea4335, #fbbc05, #34a853, #4285f4); }
+    .tool-icon.chatgpt { background: linear-gradient(135deg, #10a37f, #1a7f64); }
+    .tool-icon.grok-gemini { background: linear-gradient(135deg, #1a73e8, #8ab4f8); }
+    .tool-icon.mj-runway { background: linear-gradient(135deg, #2b1055, #7597de); }
+    .tool-icon.higgs-mag { background: linear-gradient(135deg, #ff416c, #ff4b2b); }
+    .tool-icon.labs-heygen { background: linear-gradient(135deg, #654ea3, #eaafc8); }
+    .tool-icon.notion { background: linear-gradient(135deg, #222222, #000000); border: 1px solid rgba(255,255,255,0.2); }
+    .tool-icon.ghl { background: linear-gradient(135deg, #ff5e3a, #ff2a68); }
+    .tool-icon.gflow { background: linear-gradient(135deg, #4285f4, #0f9d58); }
+
+    .tool-floating-card:hover .tool-icon {
+      transform: scale(1.15) translateZ(10px);
+    }
+
+    .tool-name {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: #ffffff;
+      margin-bottom: 4px;
+    }
+    .tool-role {
+      font-size: 0.8rem;
+      color: rgba(255, 255, 255, 0.6);
+      line-height: 1.3;
+    }
+
+    /* Apps / Social Contact Links Styles */
+    .social-links-grid {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      margin-top: 35px;
+      margin-bottom: 45px;
+      flex-wrap: wrap;
+    }
+
+    .social-icon-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 52px;
+      height: 52px;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--line);
+      color: var(--fg);
+      text-decoration: none;
+      transition: all 0.3s ease;
+    }
+
+    .social-icon-btn svg {
+      width: 24px;
+      height: 24px;
+      fill: currentColor;
+    }
+
+    .social-icon-btn:hover {
+      background: var(--acc);
+      color: var(--accfg);
+      border-color: var(--acc);
+      transform: translateY(-4px);
+      box-shadow: var(--glow);
+    }
+
+    /* Form Input Polish */
+    .inquiry-form label input[type="text"],
+    .inquiry-form label input[type="email"],
+    .inquiry-form textarea {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 12px 16px;
+      color: var(--fg);
+      font-family: inherit;
+      margin-top: 6px;
+      box-sizing: border-box;
+      outline: none;
+      transition: border-color 0.3s ease;
+    }
+
+    .inquiry-form label input[type="text"]:focus,
+    .inquiry-form label input[type="email"]:focus,
+    .inquiry-form textarea:focus {
+      border-color: var(--acc);
+    }
+
+    /* Vertical Contact Links Container */
+    .contact-links-list {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      max-width: 420px;
+      margin: 35px auto 45px auto;
+      width: 100%;
+    }
+
+    /* Individual Row Button */
+    .contact-item-btn {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      width: 100%;
+      padding: 10px 16px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--line);
+      text-decoration: none;
+      transition: all 0.3s ease;
+      box-sizing: border-box;
+    }
+
+    .contact-item-btn .social-icon-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 44px;
+      height: 44px;
+      min-width: 44px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--line);
+      color: var(--fg);
+      transition: all 0.3s ease;
+    }
+
+    .contact-item-btn .social-icon-btn svg {
+      width: 22px;
+      height: 22px;
+      fill: currentColor;
+    }
+
+    .contact-details {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      text-align: left;
+    }
+
+    .contact-details .platform-name {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--mute);
+      font-weight: 600;
+    }
+
+    .contact-details .contact-info {
+      font-size: 0.98rem;
+      color: var(--fg);
+      font-weight: 500;
+    }
+
+    /* Hover Effect */
+    .contact-item-btn:hover {
+      background: rgba(255, 255, 255, 0.07);
+      border-color: var(--acc);
+      transform: translateY(-2px);
+      box-shadow: var(--glow);
+    }
+
+    .contact-item-btn:hover .social-icon-btn {
+      background: var(--acc);
+      color: var(--accfg);
+      border-color: var(--acc);
+    }
+
+    .contact-item-btn:hover .contact-info {
+      color: var(--acc);
+    }
+
+    /* ==========================================
+       SELECTED WORK EXTRACTED STYLES
+       ========================================== */
+    .wrap {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 0 22px;
+    }
+
+    #work {
+      padding: 64px 0;
+      border-top: 1px solid var(--line);
+    }
+
+    #work h2 {
+      font-size: 28px;
+      letter-spacing: -.025em;
+      margin: 0 0 8px;
+      font-weight: 600;
+    }
+
+    .sub {
+      color: var(--mute);
+      margin: 0 0 32px;
+    }
+
+    /* Tab Navigation Buttons */
+    .tabs {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 24px;
+    }
+
+    .tabs button {
+      font: inherit;
+      font-size: 14px;
+      padding: 8px 16px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: transparent;
+      color: var(--mute);
+      cursor: pointer;
+    }
+
+    .tabs button.on {
+      background: var(--acc);
+      color: var(--accfg);
+      border-color: var(--acc);
+    }
+
+    /* Carousel Stage & Items */
+    .stage {
+      --w: 260px;
+      --h: 462px;
+      position: relative;
+      height: calc(var(--h) + 30px);
+      overflow: hidden;
+      touch-action: pan-y;
+      user-select: none;
+    }
+
+    .stage.wide {
+      --w: min(560px, 70vw);
+      --h: calc(var(--w) * 9 / 16);
+    }
+
+    /* Card Transitions & Animated 3D/Carousel Positioning */
+    .it {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: var(--w);
+      height: var(--h);
+      border-radius: 22px;
+      background: var(--card);
+      border: 1px solid var(--line);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 16px;
+      cursor: pointer;
+      transition: transform .5s cubic-bezier(.2, .8, .2, 1), opacity .4s, border-color .3s, box-shadow .3s;
+    }
+
+    .it.c {
+      border-color: var(--acc);
+      box-shadow: var(--glow);
+      cursor: default;
+    }
+
+    .it .play {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      border: 1px solid var(--line);
+      display: grid;
+      place-items: center;
+      font-size: 14px;
+      color: var(--acc);
+      animation: pulseGlow 2s infinite ease-in-out;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .it small {
+      color: var(--mute);
+      font-size: 12px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .it strong {
+      font-size: 14px;
+      font-weight: 500;
+      position: relative;
+      z-index: 2;
+    }
+
+    /* Full-cover video styling */
+    .it video {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      border: 0;
+      background: #000;
+      object-fit: cover;
+    }
+
+    /* YouTube iframe styling */
+    .it iframe {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      border: 0;
+      background: #000;
+    }
+
+    /* Navigation Arrow Buttons */
+    .arr {
+      position: absolute;
+      top: 50%;
+      z-index: 5;
+      width: 40px;
+      height: 40px;
+      margin-top: -20px;
+      border-radius: 50%;
+      border: 1px solid var(--acc);
+      background: rgba(5, 6, 7, .85);
+      color: var(--acc);
+      font-size: 18px;
+      line-height: 1;
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+      transition: .2s;
+    }
+
+    .arr:hover {
+      background: var(--acc);
+      color: var(--accfg);
+      box-shadow: var(--glow);
+    }
+
+    .arr.l {
+      left: calc(50% - var(--w) * .58 - 20px);
+    }
+
+    .arr.r {
+      left: calc(50% + var(--w) * .58 - 20px);
+    }
+
+    /* Dots Indicators */
+    .dots {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 20px;
+      align-items: center;
+      color: var(--mute);
+      font-size: 13px;
+    }
+
+    .dots i {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--line);
+      transition: .3s;
+    }
+
+    .dots i.on {
+      width: 22px;
+      border-radius: 6px;
+      background: var(--acc);
+    }
+
+    /* Separate and space out stats items */
+    .stats {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      padding: 40px 0;
+    }
+
+    .stats > div {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      padding: 0 30px;
+      border-right: 1px solid var(--line);
+    }
+
+    .stats > div:last-child {
+      border-right: none;
+    }
+
+    .stats strong {
+      font-size: 2.2rem;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+
+    .stats span {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--mute);
+      margin-top: 6px;
+    }
+
+    /* Mobile Responsiveness */
+    @media(max-width: 640px) {
+      .stage {
+        --w: 215px;
+        --h: 382px;
+      }
+      .arr.l {
+        left: calc(50% - var(--w) * .5 - 8px);
+      }
+      .arr.r {
+        left: calc(50% + var(--w) * .5 - 32px);
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Custom Cursor -->
+  <div class="custom-cursor"></div>
+  <div class="custom-cursor-follower"></div>
+
+  <div class="page-loader"><span>NICK SYCON</span><i></i></div>
+  <div class="noise"></div>
+
+  <header class="site-header">
+    <a class="brand" href="#home">NICK SYCON</a>
+    <nav>
+      <a href="#about">About</a>
+      <a href="#tools">Tools</a>
+      <a href="#work">Work</a>
+      <!-- Download CV directly when clicked -->
+      <a href="cv.pdf" download="Nick_Sycon_Resume.pdf">CV</a>
+      <a class="nav-cta" href="#inquiries">Hire Me</a>
+    </nav>
+    <button class="menu-btn" aria-label="Open menu">☰</button>
+  </header>
+
+  <main>
+    <section class="hero" id="home">
+      <div class="orb orb-a"></div>
+      <div class="orb orb-b"></div>
+      <div class="hero-copy">
+        <p class="eyebrow">AI Video Editor · Borongan, PH · Remote</p>
+        <h1 class="hero-title"><span>Every Brand Story</span><br><span>Deserves a <em>Creative Editor.</em></span></h1>
+        <p class="hero-sub">I turn concepts into cinema, moments into meaning, and attention into action.</p>
+        <div class="hero-actions">
+          <a class="button primary" href="#work">View my work <span>↗</span></a>
+          <a class="button ghost" href="#inquiries">Let's work together</a>
+        </div>
+      </div>
+      <div class="hero-line"></div><div class="scroll-indicator"><span>Scroll to explore</span><i></i></div>
+    </section>
+
+    <div class="marquee" aria-hidden="true"><div>VIDEO EDITING · MOTION DESIGN · STORYTELLING · VIDEO EDITING · MOTION DESIGN · STORYTELLING · VIDEO EDITING · MOTION DESIGN · STORYTELLING · </div></div>
+    
+    <section class="stats reveal">
+      <div><strong>4+</strong><span>Years editing</span></div>
+      <div><strong>50+</strong><span>Projects delivered</span></div>
+    </section>
+
+    <section class="about section reveal" id="about">
+      <div class="section-heading" data-reveal>
+        <span>01 / About</span>
+        <h2>Hi, I'm <em>Nick Sycon!</em></h2>
+      </div>
+      <div class="about-grid" data-reveal>
+        <div class="floating-stack">
+          <div class="app-card ae">Ae</div>
+          <div class="app-card ps">CC</div>
+          <div class="app-card pr">Pr</div>
+          <div class="portrait-card">
+            <img src="va.jpg" alt="Nick Sycon Profile" />
+            <span>CREATIVE<br>EDITOR</span>
+          </div>
+        </div>
+        <div class="about-copy">
+          <p class="lead">I edit DTC ads, VSLs and eCommerce creatives with AI-powered workflows, plus YouTube short and long-form. 
+            Fast turnaround, performance-minded edits.</p>
+          <p>I handle both content creation and marketing, so your brand doesn't just look good, it performs.</p>
+          <p>Beyond editing, I run Facebook, Instagram, Google and Pinterest ad campaigns and write scripts and CTAs for marketing videos. 
+            That means I edit with the result in mind: hooks, angles and testing, not just aesthetics.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- FAMILIAR TOOLS SECTION -->
+    <section class="tools-section section reveal" id="tools">
+      <div class="section-heading centered" data-reveal>
+        <span>02 / Tech Stack</span>
+        <h2>Familiar <em>Tools & Ecosystem</em></h2>
+        <p>The industry-standard software, AI engines, and marketing systems powering my workflow.</p>
+      </div>
+
+      <div class="tools-grid" data-reveal>
+        <div class="tool-floating-card">
+          <div class="tool-icon pr">Pr</div>
+          <div class="tool-name">Premiere Pro</div>
+          <div class="tool-role">Video Editing & Cutting</div>
+        </div>
+
+        <div class="tool-floating-card">
+          <div class="tool-icon ae">Ae</div>
+          <div class="tool-name">After Effects</div>
+          <div class="tool-role">Motion Design & VFX</div>
+        </div>
+
+        <div class="tool-floating-card">
+          <div class="tool-icon capcut">CC</div>
+          <div class="tool-name">CapCut</div>
+          <div class="tool-role">Shorts & Reels Editing</div>
+        </div>
+
+        <div class="tool-floating-card">
+          <div class="tool-icon canva">Cn</div>
+          <div class="tool-name">Canva</div>
+          <div class="tool-role">Visual Assets & Collateral</div>
+        </div>
+
+        <div class="tool-floating-card">
+          <div class="tool-icon shopify">Sh</div>
+          <div class="tool-name">Shopify</div>
+          <div class="tool-role">E-Commerce Content</div>
+        </div>
+
+        <div class="tool-floating-card">
+          <div class="tool-icon meta">Meta</div>
+          <div class="tool-name">Meta Business</div>
+          <div class="tool-role">Campaign Management</div>
+        </div>
+
+        <div class="tool-floating-card">
+          <div class="tool-icon fbads">Ads</div>
+          <div class="tool-name">FB Ads Manager</div>
+          <div class="tool-role">Ad Creatives & Performance</div>
+        </div>
+
+        <div class="tool-floating-card">
+          <div class="tool-icon gspace">GW</div>
+          <div class="tool-name">Google Workspace</div>
+          <div class="tool-role">Team Collaboration</div>
+        </div>
+
+        <div class="tool-floating-card">
+          <div class="tool-icon chatgpt">GPT</div>
+          <div class="tool-name">ChatGPT</div>
+          <div class="tool-role">Scripting & Copywriting</div>
+        </div>
+
+        <div class="tool-floating-card">
+          <div class="tool-icon grok-gemini">AI</div>
+          <div class="tool-name">Grok / Gemini</div>
+          <div class="tool-role">Concept Generation</div>
+        </div>
+
+        <div class="tool-floating-card">
+          <div class="tool-icon mj-runway">MJ</div>
+          <div class="tool-name">Midjourney / Runway</div>
+          <div class="tool-role">AI Imagery & Video Gen</div>
+        </div>
+
+        <div class="tool-floating-card">
+          <div class="tool-icon higgs-mag">Hf</div>
+          <div class="tool-name">Higgsfield / Magnific</div>
+          <div class="tool-role">Visual Enhancement</div>
+        </div>
+
+        <div class="tool-floating-card">
+          <div class="tool-icon labs-heygen">11</div>
+          <div class="tool-name">ElevenLabs / HeyGen</div>
+          <div class="tool-role">AI Voiceovers & Avatars</div>
+        </div>
+
+        <div class="tool-floating-card">
+          <div class="tool-icon notion">Nt</div>
+          <div class="tool-name">Notion</div>
+          <div class="tool-role">Project Management</div>
+        </div>
+
+        <div class="tool-floating-card">
+          <div class="tool-icon ghl">GHL</div>
+          <div class="tool-name">GoHighLevel</div>
+          <div class="tool-role">Funnel & CRM Media</div>
+        </div>
+
+        <div class="tool-floating-card">
+          <div class="tool-icon gflow">GF</div>
+          <div class="tool-name">Google Flow</div>
+          <div class="tool-role">Automation & Pipelines</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SELECTED WORK SECTION -->
+    <section id="work" class="reveal">
+      <div class="wrap">
+        <h2>Selected work</h2>
+        <p class="sub">Pick a category, then use the arrows or swipe.</p>
+        <div class="tabs" id="tabs"></div>
+        <div class="stage" id="stage">
+          <button class="arr l" id="prev" aria-label="Previous">&#10094;</button>
+          <button class="arr r" id="next" aria-label="Next">&#10095;</button>
+        </div>
+        <div class="dots" id="dots"></div>
+      </div>
+    </section>
+
+    <!-- INQUIRIES FORM -->
+    <section class="inquiries section reveal" id="inquiries">
+      <div class="section-heading centered" data-reveal>
+        <span>04 / Inquiries</span>
+        <h2>Videos that don't just look good.<br><em> They convert. </em></h2>
+      </div>
+
+      <div class="contact-links-list" data-reveal>
+        <!-- Gmail -->
+        <a href="https://mail.google.com/mail/?view=cm&fs=1&to=nicksycon@gmail.com" target="_blank" rel="noopener noreferrer" class="contact-item-btn">
+          <div class="social-icon-btn">
+            <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+          </div>
+          <div class="contact-details">
+            <span class="platform-name">Email / Gmail</span>
+            <span class="contact-info">nicksycon@gmail.com</span>
+          </div>
+        </a>
+
+        <!-- Discord -->
+        <a href="https://discord.com/users/870598595626295326" target="_blank" rel="noopener noreferrer" class="contact-item-btn">
+          <div class="social-icon-btn">
+            <svg viewBox="0 0 24 24"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994.021-.041.001-.09-.041-.106a13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.028zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>
+          </div>
+          <div class="contact-details">
+            <span class="platform-name">Discord</span>
+            <span class="contact-info">Nick.Va</span>
+          </div>
+        </a>
+
+        <!-- OnlineJobs.ph -->
+        <a href="https://www.onlinejobs.ph/jobseekers/info/3650237" target="_blank" rel="noopener noreferrer" class="contact-item-btn">
+          <div class="social-icon-btn">
+            <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14.5v-9l6 4.5-6 4.5z"/></svg>
+          </div>
+          <div class="contact-details">
+            <span class="platform-name">OnlineJobs.ph</span>
+            <span class="contact-info">View My Profile</span>
+          </div>
+        </a>
+
+        <!-- WhatsApp -->
+        <a href="https://api.whatsapp.com/send?phone=+639360364295text=Hi%20Nick,%20I'd%20like%20to%20inquire%20about%20your%20video%20editing%20services!" target="_blank" rel="noopener noreferrer" class="contact-item-btn">
+          <div class="social-icon-btn">
+            <svg viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981z"/></svg>
+          </div>
+          <div class="contact-details">
+            <span class="platform-name">WhatsApp</span>
+            <span class="contact-info">+63 936 036 4295</span>
+          </div>
+        </a>
+
+        <!-- Telegram -->
+        <a href="https://t.me/@NickSycon" target="_blank" rel="noopener noreferrer" class="contact-item-btn">
+          <div class="social-icon-btn">
+            <svg viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12s5.37 12 12 12 12-5.37 12-12S18.63 0 12 0zm5.562 8.161c-.18 1.897-.962 6.502-1.359 8.627-.168.9-.5 1.201-.82 1.23-.697.064-1.226-.461-1.901-.903-1.056-.692-1.653-1.123-2.678-1.799-1.185-.781-.417-1.21.258-1.911.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.324-.437.893-.663 3.498-1.524 5.831-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635.099-.002.321.023.465.14.121.098.155.231.171.325.016.095.035.312.02.482z"/></svg>
+          </div>
+          <div class="contact-details">
+            <span class="platform-name">Telegram</span>
+            <span class="contact-info">@NickSycon</span>
+          </div>
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <footer id="contact">
+    <span>You've reached the end.</span>
+    <span>Hire Nick Sycon</span>
+    <span>© <span id="year"></span> Nick Sycon</span>
+  </footer>
+
+  <script src="script.js"></script>
+
+  <!-- ==========================================
+       ANIMATION & INTERACTION SCRIPTS
+       ========================================== -->
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      // Loader Initialization
+      const loader = document.querySelector(".page-loader");
+      setTimeout(() => loader && loader.classList.add("loaded"), 800);
+
+      // Custom Cursor
+      const cursor = document.querySelector(".custom-cursor");
+      const follower = document.querySelector(".custom-cursor-follower");
+      document.addEventListener("mousemove", (e) => {
+        if (cursor && follower) {
+          cursor.style.transform = `translate(${e.clientX}px, ${e.clientY}px) translate(-50%, -50%)`;
+          follower.style.transform = `translate(${e.clientX}px, ${e.clientY}px) translate(-50%, -50%)`;
+        }
+      });
+      document.querySelectorAll("a, button, .it, .tool-floating-card, input, textarea").forEach((el) => {
+        el.addEventListener("mouseenter", () => document.body.classList.add("cursor-active"));
+        el.addEventListener("mouseleave", () => document.body.classList.remove("cursor-active"));
+      });
+
+      // Standard Scroll Reveal
+      const revealElems = document.querySelectorAll(".reveal, [data-reveal]");
+      const revealObs = new IntersectionObserver((entries) => {
+        entries.forEach(entry => entry.isIntersecting && entry.target.classList.add("active"));
+      }, { threshold: 0.1 });
+      revealElems.forEach(el => revealObs.observe(el));
+
+      // 3D Tilt for Tools
+      const toolCards = document.querySelectorAll(".tool-floating-card");
+      toolCards.forEach((card) => {
+        card.addEventListener("mousemove", (e) => {
+          const rect = card.getBoundingClientRect();
+          const x = e.clientX - rect.left - rect.width / 2;
+          const y = e.clientY - rect.top - rect.height / 2;
+          card.style.transform = `rotateY(${x / 10}deg) rotateX(${-y / 10}deg) translateZ(10px)`;
+        });
+        card.addEventListener("mouseleave", () => {
+          card.style.transform = `rotateY(0deg) rotateX(0deg) translateZ(0px)`;
+        });
+      });
+
+      // Set Year in Footer
+      const yearSpan = document.getElementById("year");
+      if (yearSpan) yearSpan.textContent = new Date().getFullYear();
+    });
+
+    /* ==========================================
+       CAROUSEL WITH GOOGLE DRIVE DIRECT STREAM SUPPORT
+       ========================================== */
+    const CONFIG = {
+      work: {
+        "DTC Ads": {
+          ratio: "v",
+          items: [
+            { t: "DTC Ad 01", link: "https://youtu.be/Qp2-WIYA0cU?si=-w1D49o7uQQ4-DRe" },
+            { t: "DTC Ad 02", link: "https://youtu.be/Ygs8h5VcVYI?si=Y7cL8SDLXOtpOQal" },
+            { t: "DTC Ad 03", link: "https://youtu.be/Re56yB8AiOw?si=2ptgGcnWczdmoh49" },
+            { t: "DTC Ad 04", link: "https://youtu.be/5cDx1kyGaCE?si=sXbK_BuJeBkXrng-" }
+          ]
+        },
+        "VSL": {
+          ratio: "v", /* Changed from "w" to "v" for 9:16 portrait format */
+          items: [
+            { t: "VSL Sample 01", link: "https://youtu.be/5y0k2FBm0lg?si=463RGuJ0Q3nXN6-m" },
+            { t: "VSL Sample 02", link: "https://youtu.be/1PThWDW-oWk?si=ICGQXBe4ehTPrt8j" },
+            { t: "VSL Sample 03", link: "https://youtu.be/2nN5gj-idjI?si=JuV8WxHGUg75l1Py" }
+          ]
+        },
+        "Ecom Ads": {
+          ratio: "v",
+          items: [
+            { t: "Ecom Ad 01", link: "https://youtu.be/a5MZjYRtnEw?si=0pVpqSX2Ltt88nun" },
+            { t: "Ecom Ad 02", link: "https://youtu.be/RVkj3t5IY64?si=jQ-SAG3xyep7byGl" },
+          ]
+        },
+        "AI Video": {
+          ratio: "v",
+          items: [
+            { t: "AI Video 01", link: "https://youtu.be/B78LrttJ-Jw?si=qTO6U75oackjjM8T" },
+            { t: "AI Video 02", link: "https://youtu.be/H2mTf_JqvN4?si=T6euqPyokdFzlBuR"},
+            { t: "AI Video 03", link: "https://youtu.be/9g4b0jEY9Pc?si=-cnLc3204oxanxU-" }
+          ]
+        }
+      }
+    };
+
+    const $ = id => document.getElementById(id);
+    const tabs = $("tabs"), stage = $("stage"), dots = $("dots");
+    let cur = Object.keys(CONFIG.work)[0], idx = 0, els = [];
+
+    // Extract Google Drive File ID
+    function getGoogleDriveId(url) {
+      if (!url) return null;
+      const match = url.match(/\/d\/([a-zA-Z0-9_-]+)/) || url.match(/id=([a-zA-Z0-9_-]+)/);
+      return match ? match[1] : null;
+    }
+
+    // Extract YouTube Video ID
+    function getYouTubeId(url) {
+      if (!url) return null;
+      const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/);
+      return match ? match[1] : null;
+    }
+
+    function media(l) {
+      if (!l) return '<div class="play">&#9654;</div>';
+
+      // Convert Google Drive links into direct native video playback
+      const driveId = getGoogleDriveId(l);
+      if (driveId) {
+        return `<video src="https://drive.google.com/uc?export=download&id=${driveId}" controls playsinline preload="metadata"></video>`;
+      }
+
+      // Handle YouTube links
+      const ytId = getYouTubeId(l);
+      if (ytId) {
+        return `<iframe src="https://www.youtube.com/embed/${ytId}?autoplay=0&rel=0" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
+      }
+
+      // Handle standard local .mp4 paths
+      return '<video src="' + l + '" controls playsinline preload="metadata"></video>';
+    }
+
+    function render() {
+      tabs.innerHTML = "";
+      Object.keys(CONFIG.work).forEach(k => {
+        const b = document.createElement("button");
+        b.textContent = k;
+        b.className = k === cur ? "on" : "";
+        b.onclick = () => { cur = k; idx = 0; render(); };
+        tabs.appendChild(b);
+      });
+
+      const cat = CONFIG.work[cur];
+      stage.classList.toggle("wide", cat.ratio === "w");
+
+      els.forEach(e => e.remove());
+      els = cat.items.map((v, i) => {
+        const d = document.createElement("div");
+        d.className = "it";
+        d.onclick = () => { if (i !== idx) go(i); };
+        stage.appendChild(d);
+        return d;
+      });
+
+      dots.innerHTML = cat.items.map(() => "<i></i>").join("");
+      place();
+    }
+
+    /* Animated 3D Carousel Item Placement */
+    function place() {
+      const items = CONFIG.work[cur].items;
+      els.forEach((d, i) => {
+        const o = i - idx, a = Math.abs(o), c = o === 0;
+        d.className = "it" + (c ? " c" : "");
+        d.style.transform = "translate(-50%,-50%) translateX(calc(var(--w)*" + (o * 1.05) + ")) scale(" + (c ? 1 : .78) + ")";
+        d.style.opacity = a > 1 ? 0 : (c ? 1 : .55);
+        d.style.pointerEvents = a > 1 ? "none" : "auto";
+        d.style.zIndex = 10 - a;
+
+        const v = items[i], has = !!v.link;
+        d.innerHTML = (c || !has ? media(c ? v.link : "") : '<div class="play">&#9654;</div>') + 
+                      ((!c || !has) ? '<strong>' + v.t + '</strong>' + (c && !has ? '<small>Add your video link</small>' : '') : '');
+      });
+      [...dots.children].forEach((x, i) => x.className = i === idx ? "on" : "");
+    }
+
+    function go(i) {
+      const n = CONFIG.work[cur].items.length;
+      idx = (i + n) % n;
+      place();
+    }
+
+    // Arrow Button Navigation
+    $("prev").onclick = () => go(idx - 1);
+    $("next").onclick = () => go(idx + 1);
+
+    // Keyboard Navigation
+    document.addEventListener("keydown", e => {
+      if (e.key === "ArrowLeft") go(idx - 1);
+      if (e.key === "ArrowRight") go(idx + 1);
+    });
+
+    // Touch / Pointer Swipe Logic
+    let sx = null;
+    stage.addEventListener("pointerdown", e => { sx = e.clientX; });
+    stage.addEventListener("pointerup", e => {
+      if (sx !== null && Math.abs(e.clientX - sx) > 50) {
+        go(idx + (e.clientX < sx ? 1 : -1));
+      }
+      sx = null;
+    });
+
+    // Initial Render
+    render();
+  </script>
+</body>
+</html>
